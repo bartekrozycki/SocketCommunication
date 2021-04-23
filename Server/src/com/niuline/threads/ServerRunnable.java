@@ -37,6 +37,7 @@ public class ServerRunnable implements Runnable {
             this.server = new ServerSocket(this.serverPort);
             this.workerService = new WorkerService();
 
+            System.out.println("Server started\nWaiting for clients");
             this.waitForClients();
         } catch (IOException e) {
             e.printStackTrace();

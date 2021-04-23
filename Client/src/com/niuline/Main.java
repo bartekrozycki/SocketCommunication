@@ -1,5 +1,6 @@
 package com.niuline;
 
+import javax.swing.*;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.net.Socket;
@@ -15,19 +16,50 @@ public class Main {
         Scanner sysScanner = new Scanner(System.in);
 
 
-        while (!socket.isInputShutdown()) {
+        Thread reader = new Thread(() -> {
+            while (!socket.isClosed()) {
+                String msg = sysScanner.nextLine();
+                outPrint.println(msg);
+            }
+            System.out.println("Disconnected");
+        });
 
-            System.out.println(scanner.nextLine());
+        reader.start();
 
-            System.out.print("msg: ");
-            String msg = sysScanner.nextLine();
+        Thread thread = new Thread(() -> {
+            while (scanner.hasNextLine()) {
+                String line = scanner.nextLine();
+                Scanner msgScanner = new Scanner(line);
+                String command = msgScanner.hasNext() ? msgScanner.next() : "";
+                String body = msgScanner.hasNextLine() ? msgScanner.nextLine() : "";
 
-            outPrint.println(msg);
-            if (msg.equalsIgnoreCase("close"))
-                break;
+                if (command.equalsIgnoreCase("notification")) {
 
+                    JDialog dialog = new JDialog();
+                    dialog.setAlwaysOnTop(true);
+                    JOptionPane.showMessageDialog(dialog, body, "InfoBox", JOptionPane.INFORMATION_MESSAGE);
+
+                }
+                if (command.equalsIgnoreCase("waiting")) {
+                    System.out.print("user> ");
+                }
+                if (command.equalsIgnoreCase("notFound")) {
+                    System.out.println("Command not found");
+                }
+                if (command.equalsIgnoreCase("error")) {
+                    System.out.println("Invalid command syntax");
+                }
+                if (command.equalsIgnoreCase("ok")) {
+                    System.out.println("Command executed");
+                }
+            }
+        });
+        thread.start();
+        try {
+            thread.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
-        System.out.println("Disconnected");
 
         socket.close();
 
